@@ -1,0 +1,14 @@
+target/
+jsbml.log
+.project
+.classpath
+.settings/
+*.log
+*~
+
+.idea*
+*.iml
+
+\.vscode/
+
+*.factorypath
