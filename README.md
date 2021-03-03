@@ -4,7 +4,6 @@ A simple tool that converts a metabolic network in SBML format into RDF (turtle 
 SBML2RDF use the [JSBML](http://sbml.org/Software/JSBML) library for SBML file parsing and the [JENA](https://jena.apache.org/documentation/rdf/index.html) RDF API for building the triples.  
 SBML2RDF use biomodels' [SBML vocabulary](https://registry.identifiers.org/registry/biomodels.vocabulary) to describe the SBML content.
 
-
 ## Usage
 
 the SBML2RDF convertor requires a metabolic network in SBML file format and a URI (Uniform Resource Identifiers) that uniquely identify this model
@@ -21,4 +20,6 @@ java -jar SBML2RDF.jar -i path/tp/sbml.xml -u 'http://my.model.uri#id' -o path/t
  -u (--uri) VAL  : URI that uniquely identify the model
 ```
 
+## Acknowledgment
 
+This project happen to be a simpler re-implementation of another project that can be found here: [ricordo-rdfconverter](https://github.com/sarala/ricordo-rdfconverter)
