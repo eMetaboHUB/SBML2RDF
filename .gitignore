@@ -12,3 +12,4 @@ jsbml.log
 \.vscode/
 
 *.factorypath
+/dependency-reduced-pom.xml

@@ -77,20 +77,20 @@
         <dependency>
             <groupId>org.sbml.jsbml</groupId>
             <artifactId>jsbml</artifactId>
-            <version>1.4</version>
+            <version>1.6.1</version>
         </dependency>
 
         <dependency>
             <groupId>org.apache.jena</groupId>
             <artifactId>apache-jena-libs</artifactId>
             <type>pom</type>
-            <version>3.14.0</version>
+            <version>4.3.2</version>
         </dependency>
 
         <dependency>
             <groupId>org.apache.jena</groupId>
             <artifactId>jena-core</artifactId>
-            <version>3.14.0</version>
+            <version>4.3.2</version>
         </dependency>
 
         <dependency>
