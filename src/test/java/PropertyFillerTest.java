@@ -1,5 +1,6 @@
 import org.apache.jena.rdf.model.*;
 import org.apache.jena.vocabulary.RDF;
+import org.apache.jena.vocabulary.RDFS;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -7,6 +8,9 @@ import org.junit.rules.ExpectedException;
 import vocabulary.SBMLRDF;
 
 import javax.xml.stream.XMLStreamException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -62,6 +66,16 @@ public class PropertyFillerTest {
         rdf.add(c2, SBMLRDF.NAME, "C");
         rdf.add(d, SBMLRDF.NAME, "D");
         rdf.add(e, SBMLRDF.NAME, "E");
+
+        rdf.add(a1, RDFS.label, "a1");
+        rdf.add(a2, RDFS.label, "a2");
+        rdf.add(b1, RDFS.label, "b1");
+        rdf.add(b2, RDFS.label, "b2");
+        rdf.add(c1, RDFS.label, "c1");
+        rdf.add(c2, RDFS.label, "c2");
+        rdf.add(d, RDFS.label, "d");
+        rdf.add(e, RDFS.label, "e");
+
 
         rdf.add(a1,SBMLRDF.HAS_COMPARTMENT, cmp1);
         rdf.add(a2,SBMLRDF.HAS_COMPARTMENT, cmp2);
@@ -183,5 +197,21 @@ public class PropertyFillerTest {
         assertTrue(rdf.contains(c1,isComparableTo, c2));
         assertTrue(rdf.contains(c2,isComparableTo, c1));
 
+    }
+
+    @Test
+    public void testImportSideCompounds(){
+        ArrayList<String> sideCompoundsIds = new ArrayList<>();
+        sideCompoundsIds.add("b1");
+        sideCompoundsIds.add("b2");
+        PropertyFiller fill = new PropertyFiller();
+        fill.importSideCompounds(rdf,sideCompoundsIds);
+
+        List<Resource> speciesRefs = rdf.listSubjectsWithProperty(RDF.type,ResourceFactory.createProperty(SBMLRDF.SBOURI, "SBO_0000603")).toList();
+        assertEquals(2,speciesRefs.size());
+
+        List<String> labels = speciesRefs.stream().map(r -> rdf.getProperty(r,SBMLRDF.HAS_SPECIE).getObject().asResource().getLocalName()).collect(Collectors.toList());
+        assertTrue(labels.contains("b1"));
+        assertTrue(labels.contains("b2"));
     }
 }

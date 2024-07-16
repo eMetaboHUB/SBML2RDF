@@ -2,13 +2,18 @@ import org.apache.jena.arq.querybuilder.ConstructBuilder;
 import org.apache.jena.arq.querybuilder.WhereBuilder;
 import org.apache.jena.query.QueryExecution;
 import org.apache.jena.query.QueryExecutionFactory;
-import org.apache.jena.rdf.model.Model;
-import org.apache.jena.rdf.model.Property;
-import org.apache.jena.rdf.model.ResourceFactory;
+import org.apache.jena.rdf.model.*;
 import org.apache.jena.sparql.core.Var;
+import org.apache.jena.sparql.expr.E_OneOf;
+import org.apache.jena.sparql.expr.ExprList;
+import org.apache.jena.sparql.expr.ExprVar;
+import org.apache.jena.sparql.expr.nodevalue.NodeValueString;
 import org.apache.jena.vocabulary.OWL;
 import org.apache.jena.vocabulary.RDF;
+import org.apache.jena.vocabulary.RDFS;
 import vocabulary.SBMLRDF;
+
+import java.util.Collection;
 
 public class PropertyFiller {
 
@@ -26,8 +31,6 @@ public class PropertyFiller {
                 .addWhere(compound1, SBMLRDF.NAME, name)
                 .addWhere(compound2, SBMLRDF.NAME, name)
                 .addFilter("?c1 != ?c2");
-
-        System.out.println(qb.buildString());
 
         QueryExecution qexec = QueryExecutionFactory.create(qb.build(),rdfModel);
         Model res = qexec.execConstruct();
@@ -55,9 +58,9 @@ public class PropertyFiller {
         .addWhere(reaction,SBMLRDF.PRODUCT,productParticipant)
         .addWhere(productParticipant,SBMLRDF.HAS_SPECIE,product);
 
+        //TODO filter side compounds
+        
         qb.addWhere(wb);
-        String q = qb.buildString();
-        System.out.println(q);
 
         QueryExecution qexec = QueryExecutionFactory.create(qb.build(),rdfModel);
         Model res = qexec.execConstruct(rdfModel);
@@ -68,10 +71,50 @@ public class PropertyFiller {
         wb.addWhere(reaction,SBMLRDF.REVERSIBLE,true);
 
         qb.addWhere(wb);
-        q = qb.buildString();
-        System.out.println(q);
 
         qexec = QueryExecutionFactory.create(qb.build(),rdfModel);
+        res = qexec.execConstruct();
+        rdfModel.add(res);
+        qexec.close();
+    }
+
+    public static void importSideCompounds(org.apache.jena.rdf.model.Model rdfModel, Collection<String> sideCompoundIds){
+
+        Var participant = Var.alloc("p");
+        Var metabolite = Var.alloc("m");
+        Var compoundId = Var.alloc("l");
+        Resource sideReactant = ResourceFactory.createResource(SBMLRDF.SBOURI+"SBO_0000604");
+        Resource sideProduct = ResourceFactory.createResource(SBMLRDF.SBOURI+"SBO_0000603");
+
+        ExprList sideCompoundsIdsSet = new ExprList();
+        for(String id : sideCompoundIds){
+            sideCompoundsIdsSet.add(new NodeValueString(id));
+        }
+        E_OneOf labelInList = new E_OneOf(new ExprVar(compoundId),sideCompoundsIdsSet);
+
+        ConstructBuilder sideProductBuilderTemplate = new ConstructBuilder()
+                .addConstruct(participant,RDF.type,sideProduct);
+        ConstructBuilder sideReactantBuilderTemplate = new ConstructBuilder()
+                .addConstruct(participant,RDF.type,sideReactant);
+
+        sideReactantBuilderTemplate.addWhere(metabolite, RDFS.label, compoundId)
+                .addWhere(participant,SBMLRDF.HAS_SPECIE,metabolite)
+                .addWhere(null,SBMLRDF.REACTANT,participant)
+                .addFilter(labelInList);
+        sideProductBuilderTemplate.addWhere(metabolite, RDFS.label, compoundId)
+                .addWhere(participant,SBMLRDF.HAS_SPECIE,metabolite)
+                .addWhere(null,SBMLRDF.PRODUCT,participant)
+                .addFilter(labelInList);
+
+        System.out.println(sideProductBuilderTemplate.buildString());
+        for(Statement s : rdfModel.listStatements(null,RDFS.label,(String)null).toList()){
+            System.out.println(s.getSubject().asResource().getLocalName()+" : "+s.getObject().asLiteral().getString());
+        }
+
+        QueryExecution qexec = QueryExecutionFactory.create(sideProductBuilderTemplate.build(),rdfModel);
+        Model res = qexec.execConstruct(rdfModel);
+        qexec.close();
+        qexec = QueryExecutionFactory.create(sideReactantBuilderTemplate.build(),rdfModel);
         res = qexec.execConstruct();
         rdfModel.add(res);
         qexec.close();

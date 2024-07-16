@@ -3,6 +3,7 @@ import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.rdf.model.ResourceFactory;
 import org.apache.jena.rdf.model.Statement;
 import org.apache.jena.vocabulary.RDF;
+import org.apache.jena.vocabulary.RDFS;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -220,6 +221,15 @@ public class ConvertorTest {
         assertTrue(rdf.contains(c2node,SBMLRDF.NAME,"C"));
         assertTrue(rdf.contains(dnode,SBMLRDF.NAME,"D"));
         assertTrue(rdf.contains(enode,SBMLRDF.NAME,"E"));
+
+        assertTrue(rdf.contains(a1node,RDFS.label,"a1"));
+        assertTrue(rdf.contains(a2node,RDFS.label,"a2"));
+        assertTrue(rdf.contains(b1node,RDFS.label,"b1"));
+        assertTrue(rdf.contains(b2node,RDFS.label,"b2"));
+        assertTrue(rdf.contains(c1node,RDFS.label,"c1"));
+        assertTrue(rdf.contains(c2node,RDFS.label,"c2"));
+        assertTrue(rdf.contains(dnode,RDFS.label,"d"));
+        assertTrue(rdf.contains(enode,RDFS.label,"e"));
 
         assertTrue(rdf.contains(a1node,SBMLRDF.HAS_COMPARTMENT,cmp1node));
         assertTrue(rdf.contains(a2node,SBMLRDF.HAS_COMPARTMENT,cmp2node));
