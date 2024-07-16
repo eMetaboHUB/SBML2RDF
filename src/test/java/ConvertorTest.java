@@ -1,6 +1,7 @@
 import org.apache.jena.rdf.model.RDFNode;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.rdf.model.ResourceFactory;
+import org.apache.jena.rdf.model.Statement;
 import org.apache.jena.vocabulary.RDF;
 import org.junit.Before;
 import org.junit.Rule;
@@ -211,6 +212,15 @@ public class ConvertorTest {
         assertTrue(rdf.contains(rtanode, RDF.type,SBMLRDF.REACTION));
         assertTrue(rdf.contains(rtcnode, RDF.type,SBMLRDF.REACTION));
 
+        assertTrue(rdf.contains(a1node,SBMLRDF.NAME,"A"));
+        assertTrue(rdf.contains(a2node,SBMLRDF.NAME,"A"));
+        assertTrue(rdf.contains(b1node,SBMLRDF.NAME,"B"));
+        assertTrue(rdf.contains(b2node,SBMLRDF.NAME,"B"));
+        assertTrue(rdf.contains(c1node,SBMLRDF.NAME,"C"));
+        assertTrue(rdf.contains(c2node,SBMLRDF.NAME,"C"));
+        assertTrue(rdf.contains(dnode,SBMLRDF.NAME,"D"));
+        assertTrue(rdf.contains(enode,SBMLRDF.NAME,"E"));
+
         assertTrue(rdf.contains(a1node,SBMLRDF.HAS_COMPARTMENT,cmp1node));
         assertTrue(rdf.contains(a2node,SBMLRDF.HAS_COMPARTMENT,cmp2node));
         assertTrue(rdf.contains(b1node,SBMLRDF.HAS_COMPARTMENT,cmp1node));
@@ -234,6 +244,9 @@ public class ConvertorTest {
         List<RDFNode> stmnts = rdf.listObjectsOfProperty(r1node,SBMLRDF.REACTANT).toList();
         assertTrue(stmnts.size()==1);
         assertTrue(rdf.contains(stmnts.get(0).asResource(),SBMLRDF.HAS_SPECIE,a1node));
+        for(Statement s : rdf.listStatements(null,SBMLRDF.NAME, (String) null).toList()){
+            System.out.println(s.getSubject().asResource().getLocalName()+" : "+s.getObject());
+        }
 
         stmnts = rdf.listObjectsOfProperty(r1node,SBMLRDF.PRODUCT).toList();
         assertTrue(stmnts.size()==2);

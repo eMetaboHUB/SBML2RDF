@@ -13,6 +13,8 @@ public class SBMLRDF {
      * The namespace of the vocabulary as a string
      */
     public static final String BQURI ="http://biomodels.net/biology-qualifiers#";
+    public static final String SIOURI = "http://semanticscience.org/resource#";
+    public static final String SIOPREFIX = "sio";
     public static final String NS = "http://identifiers.org/biomodels.vocabulary#";
     public static final String PREFIX = "SBMLrdf";
 
