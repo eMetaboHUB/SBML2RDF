@@ -12,8 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 public class PropertyFillerTest {
 
@@ -178,6 +177,47 @@ public class PropertyFillerTest {
         //test R transport A
         assertTrue(rdf.contains(a1,derivesInto, a2));
         assertTrue(rdf.contains(a2,derivesInto, a1));
+    }
+
+    @Test
+    public void testMetaboLinksWithSide(){
+
+        Model rdf2 = ModelFactory.createDefaultModel();
+        rdf2.add(rdf);
+
+        ArrayList<String> sideCompoundsIds = new ArrayList<>();
+        sideCompoundsIds.add("b1");
+        sideCompoundsIds.add("b2");
+        PropertyFiller fill = new PropertyFiller();
+        fill.importSideCompounds(rdf2,sideCompoundsIds);
+        fill.addMetaboLinks(rdf2,false);
+
+        //property
+        Property derivesInto = ResourceFactory.createProperty(SBMLRDF.SIOURI, "SIO_000246");
+        assertEquals(9,rdf2.listStatements(null, derivesInto, (RDFNode) null).toList().size());
+
+        //test R1 comp1
+        assertFalse(rdf2.contains(a1,derivesInto, b1));
+        assertTrue(rdf2.contains(a1,derivesInto, c1));
+
+        //test R1 comp2
+        assertFalse(rdf2.contains(a2,derivesInto, b2));
+        assertTrue(rdf2.contains(a2,derivesInto, c2));
+
+        //test R2
+        assertTrue(rdf2.contains(c1,derivesInto, d));
+        assertTrue(rdf2.contains(d,derivesInto, c1));
+
+        //test R3
+        assertTrue(rdf2.contains(c2,derivesInto, e));
+
+        //test R transport C
+        assertTrue(rdf2.contains(c2,derivesInto, c1));
+        assertTrue(rdf2.contains(c1,derivesInto, c2));
+
+        //test R transport A
+        assertTrue(rdf2.contains(a1,derivesInto, a2));
+        assertTrue(rdf2.contains(a2,derivesInto, a1));
     }
 
     @Test

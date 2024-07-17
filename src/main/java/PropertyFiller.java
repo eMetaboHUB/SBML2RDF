@@ -1,13 +1,16 @@
 import org.apache.jena.arq.querybuilder.ConstructBuilder;
+import org.apache.jena.arq.querybuilder.SelectBuilder;
 import org.apache.jena.arq.querybuilder.WhereBuilder;
 import org.apache.jena.query.QueryExecution;
 import org.apache.jena.query.QueryExecutionFactory;
 import org.apache.jena.rdf.model.*;
 import org.apache.jena.sparql.core.Var;
+import org.apache.jena.sparql.expr.E_NotExists;
 import org.apache.jena.sparql.expr.E_OneOf;
 import org.apache.jena.sparql.expr.ExprList;
 import org.apache.jena.sparql.expr.ExprVar;
 import org.apache.jena.sparql.expr.nodevalue.NodeValueString;
+import org.apache.jena.sparql.syntax.ElementSubQuery;
 import org.apache.jena.vocabulary.OWL;
 import org.apache.jena.vocabulary.RDF;
 import org.apache.jena.vocabulary.RDFS;
@@ -16,6 +19,9 @@ import vocabulary.SBMLRDF;
 import java.util.Collection;
 
 public class PropertyFiller {
+
+    public static Resource sideReactant = ResourceFactory.createResource(SBMLRDF.SBOURI+"SBO_0000604");
+    public static Resource sideProduct = ResourceFactory.createResource(SBMLRDF.SBOURI+"SBO_0000603");
 
     public static void harmonizeCompartments(org.apache.jena.rdf.model.Model rdfModel, boolean useSameAs){
         if (!useSameAs) rdfModel.setNsPrefix(SBMLRDF.SIOPREFIX,SBMLRDF.SIOURI);
@@ -49,6 +55,12 @@ public class PropertyFiller {
         Var reactantParticipant = Var.alloc("sp");
         Var productParticipant = Var.alloc("pp");
 
+
+        SelectBuilder findSidesProd = new SelectBuilder()
+                .addWhere(productParticipant,RDF.type,sideProduct);
+        SelectBuilder findSidesReact = new SelectBuilder()
+                .addWhere(reactantParticipant,RDF.type,sideReactant);
+
         ConstructBuilder qb = new ConstructBuilder()
             .addConstruct(reactant,metabolink,product);
 
@@ -56,10 +68,10 @@ public class PropertyFiller {
         .addWhere(reaction,SBMLRDF.REACTANT,reactantParticipant)
         .addWhere(reactantParticipant,SBMLRDF.HAS_SPECIE,reactant)
         .addWhere(reaction,SBMLRDF.PRODUCT,productParticipant)
-        .addWhere(productParticipant,SBMLRDF.HAS_SPECIE,product);
+        .addWhere(productParticipant,SBMLRDF.HAS_SPECIE,product)
+        .addFilter(new E_NotExists(new ElementSubQuery(findSidesProd.build())))
+        .addFilter(new E_NotExists(new ElementSubQuery(findSidesReact.build())));
 
-        //TODO filter side compounds
-        
         qb.addWhere(wb);
 
         QueryExecution qexec = QueryExecutionFactory.create(qb.build(),rdfModel);
@@ -83,8 +95,6 @@ public class PropertyFiller {
         Var participant = Var.alloc("p");
         Var metabolite = Var.alloc("m");
         Var compoundId = Var.alloc("l");
-        Resource sideReactant = ResourceFactory.createResource(SBMLRDF.SBOURI+"SBO_0000604");
-        Resource sideProduct = ResourceFactory.createResource(SBMLRDF.SBOURI+"SBO_0000603");
 
         ExprList sideCompoundsIdsSet = new ExprList();
         for(String id : sideCompoundIds){
@@ -105,11 +115,6 @@ public class PropertyFiller {
                 .addWhere(participant,SBMLRDF.HAS_SPECIE,metabolite)
                 .addWhere(null,SBMLRDF.PRODUCT,participant)
                 .addFilter(labelInList);
-
-        System.out.println(sideProductBuilderTemplate.buildString());
-        for(Statement s : rdfModel.listStatements(null,RDFS.label,(String)null).toList()){
-            System.out.println(s.getSubject().asResource().getLocalName()+" : "+s.getObject().asLiteral().getString());
-        }
 
         QueryExecution qexec = QueryExecutionFactory.create(sideProductBuilderTemplate.build(),rdfModel);
         Model res = qexec.execConstruct(rdfModel);
