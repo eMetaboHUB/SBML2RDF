@@ -1,14 +1,13 @@
-import org.apache.jena.rdf.model.RDFNode;
-import org.apache.jena.rdf.model.Resource;
-import org.apache.jena.rdf.model.ResourceFactory;
-import org.apache.jena.rdf.model.Statement;
+import org.apache.jena.rdf.model.*;
 import org.apache.jena.vocabulary.RDF;
 import org.apache.jena.vocabulary.RDFS;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+import org.sbml.jsbml.Model;
 import org.sbml.jsbml.*;
+import org.sbml.jsbml.ext.fbc.*;
 import vocabulary.SBMLRDF;
 
 import javax.xml.stream.XMLStreamException;
@@ -25,13 +24,14 @@ public class ConvertorTest {
     Compartment cmp1, cmp2, cmp3;
     Species a1, a2, b1, b2, c1, c2, d , e;
     Reaction r1, r1_2, r2, r3, rta, rtc;
+    GeneProduct g1;
 
     @Rule
     public ExpectedException exception = ExpectedException.none();
 
     @Before
     public void init() throws XMLStreamException {
-        doc = new SBMLDocument(3, 1);
+        doc = new SBMLDocument(3, 2);
         initModel();
     }
 
@@ -109,7 +109,6 @@ public class ConvertorTest {
         r1.setMetaId(r1.getId());
         r1.setReversible(false);
         r1.setSBOTerm("SBO:0000176");
-        r1.setFast(true);
         r1.addReactant(a1r1);
         r1.addProduct(b1r1);
         r1.addProduct(c1r1);
@@ -119,7 +118,6 @@ public class ConvertorTest {
         r1_2.setMetaId(r1_2.getId());
         r1_2.setReversible(false);
         r1_2.setSBOTerm("SBO:0000176");
-        r1_2.setFast(true);
         r1_2.addReactant(a2r1_2);
         r1_2.addProduct(b2r1_2);
         r1_2.addProduct(c2r1_2);
@@ -153,15 +151,20 @@ public class ConvertorTest {
         rtc.addReactant(new SpeciesReference(c2r1_2));
 
 
+        FBCModelPlugin fbcModel = (FBCModelPlugin)  model.getPlugin("http://www.sbml.org/sbml/level3/version1/fbc/version2");
+        g1 = fbcModel.createGeneProduct();
+        g1.setId("g1");
+        g1.setMetaId("g1");
+        g1.setName("g1");
+        g1.setLabel("g1");
+        fbcModel.addGeneProduct(g1); // WARN (AbstractSBase.java:2189) - Trying to register geneProduct which is already registered under listOfGeneProducts ?
 
-        // This metabolite must not be taken into account
-       /* SpeciesReference m4Ref = new SpeciesReference(m4);
-        m4Ref.setStoichiometry(0.0);
-        r1.addReactant(m1Ref);
-        r1.addReactant(m4Ref);
-        r1.addProduct(m2Ref);
-        r1.addProduct(m1RefBis);*/
+        GeneProductRef geneRef1 = new GeneProductRef("g1r");
+        geneRef1.setGeneProduct("g1");
 
+        FBCReactionPlugin rxnPlugin = (FBCReactionPlugin) r1.getPlugin("fbc");
+        GeneProductAssociation GPA = rxnPlugin.createGeneProductAssociation();
+        GPA.setAssociation(geneRef1);
 
     }
 
@@ -193,6 +196,7 @@ public class ConvertorTest {
         Resource r3node = ResourceFactory.createResource((baseUri+"#"+r3.getId()));
         Resource rtcnode = ResourceFactory.createResource((baseUri+"#"+rtc.getId()));
         Resource rtanode = ResourceFactory.createResource((baseUri+"#"+rta.getId()));
+        Resource g1node = ResourceFactory.createResource((baseUri+"#"+g1.getId()));
 
         //CHECK EXISTENCE OF METAB + COMP + location
         assertTrue(rdf.contains(cmp1node, RDF.type,SBMLRDF.COMPARTMENT));
@@ -254,9 +258,6 @@ public class ConvertorTest {
         List<RDFNode> stmnts = rdf.listObjectsOfProperty(r1node,SBMLRDF.REACTANT).toList();
         assertTrue(stmnts.size()==1);
         assertTrue(rdf.contains(stmnts.get(0).asResource(),SBMLRDF.HAS_SPECIE,a1node));
-        for(Statement s : rdf.listStatements(null,SBMLRDF.NAME, (String) null).toList()){
-            System.out.println(s.getSubject().asResource().getLocalName()+" : "+s.getObject());
-        }
 
         stmnts = rdf.listObjectsOfProperty(r1node,SBMLRDF.PRODUCT).toList();
         assertTrue(stmnts.size()==2);
@@ -266,6 +267,11 @@ public class ConvertorTest {
 
         assertFalse(rdf.containsLiteral(r1node,SBMLRDF.REVERSIBLE,true));
         assertTrue(rdf.containsLiteral(r1node,SBMLRDF.REVERSIBLE,false));
+
+        Resource geneProduct = rdf.createProperty(model.getPlugin("fbc").getURI()+"#geneProduct");
+        Property geneProductAssociation = rdf.createProperty(model.getPlugin("fbc").getURI()+"#geneProductAssociation");
+        assertTrue(rdf.contains(g1node,RDF.type,geneProduct));
+        assertTrue(rdf.contains(r1node,geneProductAssociation,g1node));
 
         //test R1 comp2
         stmnts = rdf.listObjectsOfProperty(r1_2node,SBMLRDF.REACTANT).toList();

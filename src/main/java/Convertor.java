@@ -43,11 +43,12 @@ public class Convertor {
      */
     public Convertor(org.sbml.jsbml.Model sbmlModel, org.apache.jena.rdf.model.Model rdfModel, String modelURI ) {
         this.sbmlModel = sbmlModel;
-        this.modelNamespace = modelURI+"#";
+        modelNamespace = modelURI+"#";
 
         this.rdfModel =  rdfModel;
-        this.rdfModel.setNsPrefix(modelPrefix,modelNamespace);
+        this.rdfModel.setNsPrefix(SBMLRDF.getPREFIX(),SBMLRDF.getURI());
         this.rdfModel.setNsPrefix(biomodelPrefix,SBMLRDF.BQURI);
+        this.rdfModel.setNsPrefix(modelPrefix,modelNamespace);
 
         this.sbmlResource=createModelResource(sbmlModel);
     }
@@ -63,15 +64,7 @@ public class Convertor {
      * @param modelURI the URI of the model
      */
      public Convertor(org.sbml.jsbml.Model sbmlModel, String modelURI) {
-        this.sbmlModel = sbmlModel;
-         modelNamespace = modelURI+"#";
-
-        this.rdfModel =  ModelFactory.createDefaultModel();
-         this.rdfModel.setNsPrefix(SBMLRDF.getPREFIX(),SBMLRDF.getURI());
-         this.rdfModel.setNsPrefix(biomodelPrefix,SBMLRDF.BQURI);
-         this.rdfModel.setNsPrefix(modelPrefix,modelNamespace);
-
-         this.sbmlResource=createModelResource(sbmlModel);
+        this(sbmlModel, ModelFactory.createDefaultModel(),modelURI);
     }
 
     // Generate a Resource from a sbml id, using predefined base URI
