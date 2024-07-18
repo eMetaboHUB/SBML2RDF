@@ -59,4 +59,12 @@ public class SBMLRDF {
     public final static Property REACTANT = property( "reactant" );
     public final static Property REVERSIBLE = property( "isReversible" );
     public final static Property STOICHIOMETRY = property( "stoichiometry" );
+
+    //non-sbml types and properties for model enhancement
+    public final static Property DERIVES_INTO = ResourceFactory.createProperty(SIOURI, "SIO_000245");
+    public final static Property IMMEDIATELY_DERIVES_INTO = ResourceFactory.createProperty(SIOURI, "SIO_000246");
+    public final static Property IS_VARIANT_OF = ResourceFactory.createProperty(SIOURI, "SIO_000272");
+
+    public static Resource SIDEREACTANT = ResourceFactory.createResource(SBOURI+"SBO_0000604");
+    public static Resource SIDEPRODUCT = ResourceFactory.createResource(SBOURI+"SBO_0000603");
 }

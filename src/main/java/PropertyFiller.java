@@ -20,15 +20,12 @@ import java.util.Collection;
 
 public class PropertyFiller {
 
-    public static Resource sideReactant = ResourceFactory.createResource(SBMLRDF.SBOURI+"SBO_0000604");
-    public static Resource sideProduct = ResourceFactory.createResource(SBMLRDF.SBOURI+"SBO_0000603");
-
     public static void harmonizeCompartments(org.apache.jena.rdf.model.Model rdfModel, boolean useSameAs){
         if (!useSameAs) rdfModel.setNsPrefix(SBMLRDF.SIOPREFIX,SBMLRDF.SIOURI);
         Var compound1 = Var.alloc("c1");
         Var compound2 = Var.alloc("c2");
         Var name = Var.alloc("n");
-        Property link = useSameAs ? OWL.sameAs : ResourceFactory.createProperty(SBMLRDF.SIOURI,"SIO_000272");
+        Property link = useSameAs ? OWL.sameAs : SBMLRDF.IS_VARIANT_OF;
 
         ConstructBuilder qb = new ConstructBuilder()
                 .addConstruct(compound1,link,compound2)
@@ -47,7 +44,7 @@ public class PropertyFiller {
 
     public static void addMetaboLinks(org.apache.jena.rdf.model.Model rdfModel, Boolean useTransitive){
         rdfModel.setNsPrefix(SBMLRDF.SIOPREFIX,SBMLRDF.SIOURI);
-        Property metabolink = useTransitive ? ResourceFactory.createProperty(SBMLRDF.SIOURI, "SIO_000245") : ResourceFactory.createProperty(SBMLRDF.SIOURI, "SIO_000246");
+        Property metabolink = useTransitive ? SBMLRDF.DERIVES_INTO : SBMLRDF.IMMEDIATELY_DERIVES_INTO;
 
         Var reaction = Var.alloc("r");
         Var reactant = Var.alloc("s");
@@ -57,9 +54,9 @@ public class PropertyFiller {
 
 
         SelectBuilder findSidesProd = new SelectBuilder()
-                .addWhere(productParticipant,RDF.type,sideProduct);
+                .addWhere(productParticipant,RDF.type,SBMLRDF.SIDEPRODUCT);
         SelectBuilder findSidesReact = new SelectBuilder()
-                .addWhere(reactantParticipant,RDF.type,sideReactant);
+                .addWhere(reactantParticipant,RDF.type,SBMLRDF.SIDEREACTANT);
 
         ConstructBuilder qb = new ConstructBuilder()
             .addConstruct(reactant,metabolink,product);
@@ -103,9 +100,9 @@ public class PropertyFiller {
         E_OneOf labelInList = new E_OneOf(new ExprVar(compoundId),sideCompoundsIdsSet);
 
         ConstructBuilder sideProductBuilderTemplate = new ConstructBuilder()
-                .addConstruct(participant,RDF.type,sideProduct);
+                .addConstruct(participant,RDF.type,SBMLRDF.SIDEPRODUCT);
         ConstructBuilder sideReactantBuilderTemplate = new ConstructBuilder()
-                .addConstruct(participant,RDF.type,sideReactant);
+                .addConstruct(participant,RDF.type,SBMLRDF.SIDEREACTANT);
 
         sideReactantBuilderTemplate.addWhere(metabolite, RDFS.label, compoundId)
                 .addWhere(participant,SBMLRDF.HAS_SPECIE,metabolite)
