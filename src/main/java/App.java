@@ -83,14 +83,22 @@ public class App {
             org.apache.jena.rdf.model.Model rdf = convert.getRdfModel();
 
             if(!app.silent) System.out.println(rdf.listStatements().toList().size()+" triples");
+
+            // [optional] add extra links:
+            //----------------------------
             int n = rdf.listStatements().toList().size();
             if(!app.silent && (app.linkCompartments || app.importSideCompounds!=null || app.addMetaboLink)) System.out.println("[enhance] adding extra triples:");
+
+            //      [optional] add links between compartments' compounds
+            //----------------------------------------------------------
             if(app.linkCompartments){
                 if(!app.silent) System.out.println("[enhance] Harmonizing compartmentalized compound versions...");
                 PropertyFiller.harmonizeCompartments(rdf,false);
                 if(!app.silent) System.out.println((rdf.listStatements().toList().size()-n)+" triples added");
                 n = rdf.listStatements().toList().size();
             }
+            //      [optional] tag side compounds from file
+            //---------------------------------------------
             if(app.importSideCompounds!=null){
                 if(!app.silent) System.out.println("[enhance] Importing side compounds...");
                 Collection<String> sideCompounds = parseSideCompoundsFile(app.importSideCompounds);
@@ -100,6 +108,8 @@ public class App {
                 if(!app.silent) System.out.println((rdf.listStatements().toList().size()-n)+" triples added");
                 n = rdf.listStatements().toList().size();
             }
+            //      [optional] add compound-to-compound metabolic relationship
+            //----------------------------------------------------------------
             if(app.addMetaboLink){
                 if(!app.silent && app.importSideCompounds!=null) System.out.println("[enhance] Adding compound-to-compound metabolic links, ignoring side compounds...");
                 if(!app.silent && app.importSideCompounds==null) System.out.println("[enhance] Adding compound-to-compound metabolic links...");
@@ -114,7 +124,7 @@ public class App {
             if(!app.silent) System.out.println(rdf.listStatements().toList().size()+" triples");
 
             //write RDF model in turtle
-            //-----------------------------------
+            //-------------------------
             OutputStream out = new FileOutputStream(new File(app.outputPath));
             RDFDataMgr.write(out, rdf, RDFFormat.TURTLE);
             if(!app.silent)System.out.println("\nRDF model exported : "+app.outputPath);
@@ -143,7 +153,7 @@ public class App {
             "SBML2RDF also include an optional model enhancement for knowledge graph, adding links between same compounds" +
             " in different compartments, direct links between reactants and products of the same reaction " +
             "(bypassing [specie <- specieRef <- reaction -> specieRef -> specie] paths), " +
-            "and side compounds typing from a provided list.\n"+
+            "and side compounds (also known as, or closely related to : ubiquitous/auxiliary/currency/ancillary compounds) typing from a provided list.\n"+
             "SBML2RDF use the [JSBML](http://sbml.org/Software/JSBML) library for SBML file parsing and the [JENA](https://jena.apache.org/documentation/rdf/index.html) RDF API for building the triples.  \n" +
             "SBML2RDF use biomodels' [SBML vocabulary](https://registry.identifiers.org/registry/biomodels.vocabulary) to describe the SBML content.  \n";
     }
