@@ -195,14 +195,14 @@ public class App {
                 System.exit(0);
             }
             else {
-                System.out.println(this.getUsage());
+                this.printHeader();
                 parser.printUsage(System.out);
                 System.exit(0);
             }
         }
 
         if (this.h == true) {
-            System.out.println(this.getUsage());
+            this.printHeader();
             parser.printUsage(System.out);
             System.exit(0);
         }
