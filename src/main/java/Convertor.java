@@ -3,6 +3,7 @@ import org.apache.jena.rdf.model.Property;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.rdf.model.ResourceFactory;
 import org.apache.jena.vocabulary.RDF;
+import org.apache.jena.vocabulary.RDFS;
 import org.sbml.jsbml.*;
 import org.sbml.jsbml.ext.fbc.*;
 import vocabulary.SBMLRDF;
@@ -42,11 +43,12 @@ public class Convertor {
      */
     public Convertor(org.sbml.jsbml.Model sbmlModel, org.apache.jena.rdf.model.Model rdfModel, String modelURI ) {
         this.sbmlModel = sbmlModel;
-        this.modelNamespace = modelURI+"#";
+        modelNamespace = modelURI+"#";
 
         this.rdfModel =  rdfModel;
-        this.rdfModel.setNsPrefix(modelPrefix,modelNamespace);
+        this.rdfModel.setNsPrefix(SBMLRDF.getPREFIX(),SBMLRDF.getURI());
         this.rdfModel.setNsPrefix(biomodelPrefix,SBMLRDF.BQURI);
+        this.rdfModel.setNsPrefix(modelPrefix,modelNamespace);
 
         this.sbmlResource=createModelResource(sbmlModel);
     }
@@ -62,24 +64,18 @@ public class Convertor {
      * @param modelURI the URI of the model
      */
      public Convertor(org.sbml.jsbml.Model sbmlModel, String modelURI) {
-        this.sbmlModel = sbmlModel;
-         modelNamespace = modelURI+"#";
-
-        this.rdfModel =  ModelFactory.createDefaultModel();
-         this.rdfModel.setNsPrefix(SBMLRDF.getPREFIX(),SBMLRDF.getURI());
-         this.rdfModel.setNsPrefix(biomodelPrefix,SBMLRDF.BQURI);
-         this.rdfModel.setNsPrefix(modelPrefix,modelNamespace);
-
-         this.sbmlResource=createModelResource(sbmlModel);
+        this(sbmlModel, ModelFactory.createDefaultModel(),modelURI);
     }
 
     // Generate a Resource from a sbml id, using predefined base URI
-    private Resource initResource(String id){
-        return rdfModel.createResource(modelNamespace + id);
+    private Resource initResource(AbstractSBase sbmlEntry){
+        Resource node = rdfModel.createResource(modelNamespace + sbmlEntry.getMetaId());
+        node.addProperty(RDFS.label,sbmlEntry.getId());
+        return node;
     }
 
     private Resource createModelResource(Model sbmlModel){
-        Resource sbmlResource = initResource(sbmlModel.getMetaId());
+        Resource sbmlResource = initResource(sbmlModel);
         sbmlResource.addProperty(RDF.type,SBMLRDF.SBMLMODEL);
         sbmlResource.addProperty(SBMLRDF.NAME,sbmlModel.getName());
         createAnnotation(sbmlResource,sbmlModel);
@@ -87,7 +83,7 @@ public class Convertor {
     }
 
     private Resource createCompartmentResource(Compartment sbmlCompartment){
-        Resource compartment = initResource(sbmlCompartment.getMetaId());
+        Resource compartment = initResource(sbmlCompartment);
         compartment.addProperty(RDF.type, SBMLRDF.COMPARTMENT);
         compartment.addProperty(SBMLRDF.NAME, sbmlCompartment.getName());
         createAnnotation(compartment, sbmlCompartment);
@@ -95,7 +91,7 @@ public class Convertor {
     }
 
     private Resource createSpeciesResource(Species sbmlSpecie){
-        Resource specie = initResource(sbmlSpecie.getMetaId());
+        Resource specie = initResource(sbmlSpecie);
         specie.addProperty(RDF.type, SBMLRDF.SPECIE);
         specie.addProperty(SBMLRDF.NAME,sbmlSpecie.getName());
         specie.addProperty(SBMLRDF.HAS_COMPARTMENT,rdfModel.createResource(modelNamespace + sbmlSpecie.getCompartmentInstance().getMetaId()));
@@ -109,7 +105,7 @@ public class Convertor {
             //create blank node
             specieRef=rdfModel.createResource();
         }else{
-            specieRef = initResource(sbmlSpecieRef.getMetaId());
+            specieRef = initResource(sbmlSpecieRef);
 
         }
         specieRef.addProperty(RDF.type, SBMLRDF.SPECIESREF);
@@ -119,7 +115,7 @@ public class Convertor {
     }
 
     private Resource createReactionResource(Reaction sbmlReaction){
-        Resource reaction = initResource(sbmlReaction.getMetaId());
+        Resource reaction = initResource(sbmlReaction);
         reaction.addProperty(RDF.type, SBMLRDF.REACTION);
         reaction.addProperty(SBMLRDF.NAME,sbmlReaction.getName());
         reaction.addLiteral(SBMLRDF.REVERSIBLE,sbmlReaction.getReversible());
@@ -208,7 +204,7 @@ public class Convertor {
 
 
             for (GeneProduct sbmlGene : fbcParser.getListOfGeneProducts()){
-                Resource gene = initResource(sbmlGene.getMetaId());
+                Resource gene = initResource(sbmlGene);
                 gene.addProperty(RDF.type, geneProduct);
                 gene.addProperty(SBMLRDF.NAME,sbmlGene.getLabel());
                 createAnnotation(gene,sbmlGene);
