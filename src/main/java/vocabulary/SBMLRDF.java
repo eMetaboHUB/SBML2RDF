@@ -4,6 +4,9 @@ import org.apache.jena.rdf.model.Property;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.rdf.model.ResourceFactory;
 
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+
 /**
  * Class to access the vocabulary of the biomodels SBMLRDF schema
  */
@@ -32,11 +35,15 @@ public class SBMLRDF {
     }
 
     protected static final Resource resource(String local) {
-        return ResourceFactory.createResource(NS + local);
+        return ResourceFactory.createResource(NS + encode(local));
     }
 
     protected static final Property property(String local) {
-        return ResourceFactory.createProperty(NS, local);
+        return ResourceFactory.createProperty(NS, encode(local));
+    }
+
+    public static final String encode(String string){
+        return URLEncoder.encode(string, StandardCharsets.UTF_8);
     }
 
 

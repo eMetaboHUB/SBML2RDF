@@ -8,6 +8,7 @@ import org.sbml.jsbml.*;
 import org.sbml.jsbml.ext.fbc.*;
 import vocabulary.SBMLRDF;
 
+import java.net.URI;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -69,7 +70,7 @@ public class Convertor {
 
     // Generate a Resource from a sbml id, using predefined base URI
     private Resource initResource(AbstractSBase sbmlEntry){
-        Resource node = rdfModel.createResource(modelNamespace + sbmlEntry.getMetaId());
+        Resource node = rdfModel.createResource(modelNamespace + SBMLRDF.encode(sbmlEntry.getMetaId()));
         node.addProperty(RDFS.label,sbmlEntry.getId());
         return node;
     }
@@ -94,7 +95,7 @@ public class Convertor {
         Resource specie = initResource(sbmlSpecie);
         specie.addProperty(RDF.type, SBMLRDF.SPECIE);
         specie.addProperty(SBMLRDF.NAME,sbmlSpecie.getName());
-        specie.addProperty(SBMLRDF.HAS_COMPARTMENT,rdfModel.createResource(modelNamespace + sbmlSpecie.getCompartmentInstance().getMetaId()));
+        specie.addProperty(SBMLRDF.HAS_COMPARTMENT,rdfModel.createResource(modelNamespace + SBMLRDF.encode(sbmlSpecie.getCompartmentInstance().getMetaId())));
         createAnnotation(specie,sbmlSpecie);
         return specie;
     }
@@ -110,7 +111,7 @@ public class Convertor {
         }
         specieRef.addProperty(RDF.type, SBMLRDF.SPECIESREF);
         specieRef.addLiteral(SBMLRDF.STOICHIOMETRY, sbmlSpecieRef.getStoichiometry());
-        specieRef.addProperty(SBMLRDF.HAS_SPECIE,rdfModel.createResource(modelNamespace + sbmlSpecieRef.getSpeciesInstance().getMetaId()));
+        specieRef.addProperty(SBMLRDF.HAS_SPECIE,rdfModel.createResource(modelNamespace + SBMLRDF.encode(sbmlSpecieRef.getSpeciesInstance().getMetaId())));
         return specieRef;
     }
 
@@ -151,8 +152,34 @@ public class Convertor {
             if(term.isBiologicalQualifier()) {
                 Property p = ResourceFactory.createProperty(SBMLRDF.BQURI, term.getQualifier().getElementNameEquivalent());
                 for (String resourceURI : term.getResources()) {
+                    try {
+                        new URI(resourceURI);
+                    } catch (Exception e) {
+                        System.err.println("The resource URI \"" + resourceURI + "\" is not valid, attempting to fix");
+                        int index = Math.max(resourceURI.lastIndexOf('/'),resourceURI.lastIndexOf('#'));
+                        if(index != -1){
+                            String id = resourceURI.substring(index+1);
+                            String base = resourceURI.substring(0,index);
+                            String newResourceURI = base + "/" + SBMLRDF.encode(id);
+                            System.err.println(resourceURI + " changed into "+ newResourceURI);
+                            resourceURI = newResourceURI;
+
+                        }else{
+                            System.err.println("Could not fix the resource URI \"" + resourceURI + "\", skipping this annotation");
+                            continue;
+                        }
+
+                        try {
+                            new URI(resourceURI);
+                        } catch (Exception e2) {
+                            System.err.println("Could not fix the resource URI \"" + resourceURI + "\", skipping this annotation");
+                            continue;
+                        }
+
+                    }
                     resource.addProperty(p, rdfModel.createResource(resourceURI));
                 }
+
             }
         }
     }
@@ -217,8 +244,8 @@ public class Convertor {
                     Set<GeneProductRef> associatedGenes = parseGPA(association);
 
                     for(GeneProductRef sbmlGeneRef : associatedGenes){
-                        Resource gene = rdfModel.createResource(modelNamespace + sbmlGeneRef.getGeneProductInstance().getMetaId());
-                        Resource reaction = rdfModel.createResource(modelNamespace + sbmlReaction.getMetaId());
+                        Resource gene = rdfModel.createResource(modelNamespace + SBMLRDF.encode(sbmlGeneRef.getGeneProductInstance().getMetaId()));
+                        Resource reaction = rdfModel.createResource(modelNamespace + SBMLRDF.encode(sbmlReaction.getMetaId()));
                         reaction.addProperty(geneProductAssociation, gene);
                     }
                 }
