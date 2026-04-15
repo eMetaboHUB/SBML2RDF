@@ -155,24 +155,23 @@ public class Convertor {
                     try {
                         new URI(resourceURI);
                     } catch (Exception e) {
-                        System.err.println("The resource URI \"" + resourceURI + "\" is not valid, attempting to fix");
                         int index = Math.max(resourceURI.lastIndexOf('/'),resourceURI.lastIndexOf('#'));
                         if(index != -1){
                             String id = resourceURI.substring(index+1);
                             String base = resourceURI.substring(0,index);
                             String newResourceURI = base + "/" + SBMLRDF.encode(id);
-                            System.err.println(resourceURI + " changed into "+ newResourceURI);
+                            System.err.println("[WARNING] \""+resourceURI + "\" changed into \""+ newResourceURI+"\"");
                             resourceURI = newResourceURI;
 
                         }else{
-                            System.err.println("Could not fix the resource URI \"" + resourceURI + "\", skipping this annotation");
+                            System.err.println("[ERROR] URI \"" + resourceURI + "\"is not valid and could not be fixed. Statement ignored.");
                             continue;
                         }
 
                         try {
                             new URI(resourceURI);
                         } catch (Exception e2) {
-                            System.err.println("Could not fix the resource URI \"" + resourceURI + "\", skipping this annotation");
+                            System.err.println("[ERROR] URI \"" + resourceURI + "\"is not valid and could not be fixed. Statement ignored.");
                             continue;
                         }
 
