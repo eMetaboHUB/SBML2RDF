@@ -1,11 +1,13 @@
-import org.apache.jena.rdf.model.*;
+import org.apache.jena.rdf.model.Property;
+import org.apache.jena.rdf.model.RDFNode;
+import org.apache.jena.rdf.model.Resource;
+import org.apache.jena.rdf.model.ResourceFactory;
 import org.apache.jena.vocabulary.RDF;
 import org.apache.jena.vocabulary.RDFS;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
-import org.sbml.jsbml.Model;
 import org.sbml.jsbml.*;
 import org.sbml.jsbml.ext.fbc.*;
 import vocabulary.SBMLRDF;
@@ -62,7 +64,7 @@ public class ConvertorTest {
         cmp1.setSize(2.0);
         cmp1.setSpatialDimensions(4.0);
 
-        a1 = model.createSpecies("a1", "A", cmp1);a1.setMetaId(a1.getId());
+        a1 = model.createSpecies("a1_c", "A", cmp1);a1.setMetaId(a1.getId());
         a2 = model.createSpecies("a2", "A", cmp2);a2.setMetaId(a2.getId());
         b1 = model.createSpecies("b1", "B", cmp1);b1.setMetaId(b1.getId());
         b2 = model.createSpecies("b2", "B", cmp2);b2.setMetaId(b2.getId());
@@ -82,6 +84,16 @@ public class ConvertorTest {
         cvterm.setQualifierType(org.sbml.jsbml.CVTerm.Type.BIOLOGICAL_QUALIFIER);
         cvterm.setBiologicalQualifierType(CVTerm.Qualifier.BQB_IS);
         annotation.addCVTerm(cvterm);
+        CVTerm cvterm2 = new CVTerm();
+        cvterm2.addResource("https://identifiers.org/ weird uri");
+        cvterm2.setQualifierType(org.sbml.jsbml.CVTerm.Type.BIOLOGICAL_QUALIFIER);
+        cvterm2.setBiologicalQualifierType(CVTerm.Qualifier.BQB_IS);
+        annotation.addCVTerm(cvterm2);
+        CVTerm cvterm3 = new CVTerm();
+        cvterm3.addResource("really weird uri");
+        cvterm3.setQualifierType(org.sbml.jsbml.CVTerm.Type.BIOLOGICAL_QUALIFIER);
+        cvterm3.setBiologicalQualifierType(CVTerm.Qualifier.BQB_IS);
+        annotation.addCVTerm(cvterm3);
 
         a1.setAnnotation(annotation);
         a1.setSBOTerm("SBO:0000299");
@@ -226,7 +238,7 @@ public class ConvertorTest {
         assertTrue(rdf.contains(dnode,SBMLRDF.NAME,"D"));
         assertTrue(rdf.contains(enode,SBMLRDF.NAME,"E"));
 
-        assertTrue(rdf.contains(a1node,RDFS.label,"a1"));
+        assertTrue(rdf.contains(a1node,RDFS.label,"a1_c"));
         assertTrue(rdf.contains(a2node,RDFS.label,"a2"));
         assertTrue(rdf.contains(b1node,RDFS.label,"b1"));
         assertTrue(rdf.contains(b2node,RDFS.label,"b2"));
@@ -234,6 +246,14 @@ public class ConvertorTest {
         assertTrue(rdf.contains(c2node,RDFS.label,"c2"));
         assertTrue(rdf.contains(dnode,RDFS.label,"d"));
         assertTrue(rdf.contains(enode,RDFS.label,"e"));
+
+        //check annotation
+        Resource a1Annot1node = ResourceFactory.createResource("https://identifiers.org/SBO_0000299");
+        assertTrue(rdf.contains(a1node,ResourceFactory.createProperty(SBMLRDF.BQURI,"is"),a1Annot1node));
+        Resource a1Annot2node = ResourceFactory.createResource("https://identifiers.org/+weird+uri");
+        assertTrue(rdf.contains(a1node,ResourceFactory.createProperty(SBMLRDF.BQURI,"is"),a1Annot2node));
+        Resource a1Annot3node = ResourceFactory.createResource("really+weird+uri");
+        assertFalse(rdf.contains(a1node,ResourceFactory.createProperty(SBMLRDF.BQURI,"is"),a1Annot3node));
 
         assertTrue(rdf.contains(a1node,SBMLRDF.HAS_COMPARTMENT,cmp1node));
         assertTrue(rdf.contains(a2node,SBMLRDF.HAS_COMPARTMENT,cmp2node));
