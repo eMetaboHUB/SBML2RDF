@@ -7,7 +7,7 @@
     <groupId>fr.metexplore</groupId>
     <artifactId>SBML2RDF</artifactId>
     <name>SBML2RDF</name>
-    <version>1.0.1</version>
+    <version>1.0.1-SNAPSHOT</version>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
