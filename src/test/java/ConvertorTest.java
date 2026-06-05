@@ -1,7 +1,4 @@
-import org.apache.jena.rdf.model.Property;
-import org.apache.jena.rdf.model.RDFNode;
-import org.apache.jena.rdf.model.Resource;
-import org.apache.jena.rdf.model.ResourceFactory;
+import org.apache.jena.rdf.model.*;
 import org.apache.jena.vocabulary.RDF;
 import org.apache.jena.vocabulary.RDFS;
 import org.junit.Before;
@@ -9,6 +6,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.sbml.jsbml.*;
+import org.sbml.jsbml.Model;
 import org.sbml.jsbml.ext.fbc.*;
 import vocabulary.SBMLRDF;
 
@@ -23,10 +21,12 @@ public class ConvertorTest {
 
     public SBMLDocument doc;
     Model model;
+    org.apache.jena.rdf.model.Model rdf;
     Compartment cmp1, cmp2, cmp3;
     Species a1, a2, b1, b2, c1, c2, d , e;
     Reaction r1, r1_2, r2, r3, rta, rtc;
     GeneProduct g1;
+    String baseUri = "org.mytest";
 
     @Rule
     public ExpectedException exception = ExpectedException.none();
@@ -178,14 +178,14 @@ public class ConvertorTest {
         GeneProductAssociation GPA = rxnPlugin.createGeneProductAssociation();
         GPA.setAssociation(geneRef1);
 
+        Convertor conv = new Convertor(model,baseUri);
+        conv.run();
+        rdf = conv.getRdfModel();
+
     }
 
     @Test
     public void testRun(){
-        String baseUri = "org.mytest";
-        Convertor conv = new Convertor(model,baseUri);
-        conv.run();
-        org.apache.jena.rdf.model.Model rdf = conv.getRdfModel();
 
         assertFalse(rdf.containsResource(ResourceFactory.createResource((baseUri+"#foo"))));
         //build metab node
@@ -237,6 +237,15 @@ public class ConvertorTest {
         assertTrue(rdf.contains(c2node,SBMLRDF.NAME,"C"));
         assertTrue(rdf.contains(dnode,SBMLRDF.NAME,"D"));
         assertTrue(rdf.contains(enode,SBMLRDF.NAME,"E"));
+        assertTrue(rdf.contains(r1node,SBMLRDF.NAME,"name1"));
+        assertTrue(rdf.contains(r1_2node,SBMLRDF.NAME,"name1"));
+        assertTrue(rdf.contains(r2node,SBMLRDF.NAME,""));
+        assertTrue(rdf.contains(r3node,SBMLRDF.NAME,""));
+        assertTrue(rdf.contains(rtanode,SBMLRDF.NAME,"transport-a"));
+        assertTrue(rdf.contains(rtcnode,SBMLRDF.NAME,"transport-c"));
+        assertTrue(rdf.contains(cmp1node,SBMLRDF.NAME,"compartment1"));
+        assertTrue(rdf.contains(cmp2node,SBMLRDF.NAME,"compartment2"));
+        assertTrue(rdf.contains(cmp3node,SBMLRDF.NAME,""));
 
         assertTrue(rdf.contains(a1node,RDFS.label,"a1_c"));
         assertTrue(rdf.contains(a2node,RDFS.label,"a2"));
@@ -297,6 +306,8 @@ public class ConvertorTest {
         stmnts = rdf.listObjectsOfProperty(r1_2node,SBMLRDF.REACTANT).toList();
         assertTrue(stmnts.size()==1);
         assertTrue(rdf.contains(stmnts.get(0).asResource(),SBMLRDF.HAS_SPECIE,a2node));
+        assertTrue(rdf.contains(stmnts.get(0).asResource(), SBMLRDF.STOICHIOMETRY,  rdf.createTypedLiteral(2.0)));
+
 
         stmnts = rdf.listObjectsOfProperty(r1_2node,SBMLRDF.PRODUCT).toList();
         assertTrue(stmnts.size()==2);
@@ -311,6 +322,8 @@ public class ConvertorTest {
         stmnts = rdf.listObjectsOfProperty(r2node,SBMLRDF.REACTANT).toList();
         assertTrue(stmnts.size()==1);
         assertTrue(rdf.contains(stmnts.get(0).asResource(),SBMLRDF.HAS_SPECIE,c1node));
+        assertTrue(rdf.contains(stmnts.get(0).asResource(), SBMLRDF.STOICHIOMETRY,  rdf.createTypedLiteral(4.0)));
+
 
         stmnts = rdf.listObjectsOfProperty(r2node,SBMLRDF.PRODUCT).toList();
         assertTrue(stmnts.size()==1);
@@ -347,6 +360,8 @@ public class ConvertorTest {
         stmnts = rdf.listObjectsOfProperty(rtanode,SBMLRDF.REACTANT).toList();
         assertTrue(stmnts.size()==1);
         assertTrue(rdf.contains(stmnts.get(0).asResource(),SBMLRDF.HAS_SPECIE,a1node));
+        assertTrue(rdf.contains(stmnts.get(0).asResource(), SBMLRDF.STOICHIOMETRY,  rdf.createTypedLiteral(2.0)));
+
 
         stmnts = rdf.listObjectsOfProperty(rtanode,SBMLRDF.PRODUCT).toList();
         assertTrue(stmnts.size()==1);

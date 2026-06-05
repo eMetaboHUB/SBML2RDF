@@ -23,6 +23,16 @@ public class SBMLRDF {
     public static final String PREFIX = "SBMLrdf";
 
     /**
+     * SBML annotation-compliant name spaces
+     */
+    public static final String RDFNS="http://www.w3.org/1999/02/22-rdf-syntax-ns#";
+    public static final String RDFSNS="http://www.w3.org/2000/01/rdf-schema#";
+    public static final String DCTERMSNS="http://purl.org/dc/terms/";
+    public static final String VCARDSNS="http://www.w3.org/2006/vcard/ns#";
+    public static final String BQBIOLNS="http://biomodels.net/biology-qualifiers#";
+    public static final String BQLMODELNS ="http://biomodels.net/model-qualifiers#";
+
+    /**
      * returns the URI for this schema
      *
      * @return the URI for this schema
